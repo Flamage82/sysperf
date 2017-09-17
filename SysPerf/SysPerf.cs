@@ -19,18 +19,27 @@
 
         private readonly Timer timer = new Timer();
 
+        private readonly OverlayForm form;
+
         public SysPerf()
         {
             this.notifyIcon.Visible = true;
             var menuItem = new MenuItem("Exit");
             menuItem.Click += this.MenuExitClick;
             this.notifyIcon.ContextMenu = new ContextMenu(new[] { menuItem });
+
+            this.form = new OverlayForm();
+            this.form.Show();
+            this.form.Width = 102;
+            this.form.Height = 23;
+
             this.perfIdle.CategoryName = "LogicalDisk";
             this.perfIdle.CounterName = "% Idle Time";
             this.perfIdle.InstanceName = "C:";
             this.perfCpu.CategoryName = "Processor";
             this.perfCpu.CounterName = "% Idle Time";
             this.perfCpu.InstanceName = "_Total";
+
             this.timer.Interval = 100;
             this.timer.Tick += this.TimerTick;
             this.timer.Start();
@@ -48,18 +57,24 @@
             this.timer.Dispose();
             this.perfIdle.Dispose();
             this.notifyIcon.Dispose();
+            this.form.Dispose();
             this.ExitThread();
         }
 
         private void TimerTick(object sender, EventArgs e)
         {
-            var disk = Convert.ToInt32((float)(this.perfIdle.NextValue() / 100.0 * 14.0));
-            var cpu = Convert.ToInt32((float)(this.perfCpu.NextValue() / 100.0 * 14.0));
+            var disk = this.perfIdle.NextValue() / 100.0;
+            var cpu = this.perfCpu.NextValue() / 100.0;
+
+            this.form.DrawPerfCounters(disk, cpu);
+
+            var diskHeight = Convert.ToInt32((float)(disk * 14.0));
+            var cpuHeight = Convert.ToInt32((float)(cpu * 14.0));
             var bitmap = new Bitmap(IconDimension, IconDimension);
             var graphics = Graphics.FromImage(bitmap);
             graphics.DrawRectangle(Pens.Black, 0, 0, 15, 15);
-            graphics.FillRectangle(Brushes.Green, 1, 1 + cpu, 7, 14 - cpu);
-            graphics.FillRectangle(Brushes.Red, 8, 1 + disk, 7, 14 - disk);
+            graphics.FillRectangle(Brushes.Green, 1, 1 + cpuHeight, 7, 14 - cpuHeight);
+            graphics.FillRectangle(Brushes.Red, 8, 1 + diskHeight, 7, 14 - diskHeight);
             var hicon = bitmap.GetHicon();
             var icon = (Icon)Icon.FromHandle(hicon).Clone();
             DestroyIcon(hicon);
