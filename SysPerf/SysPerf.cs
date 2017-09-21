@@ -24,9 +24,14 @@
         public SysPerf()
         {
             this.notifyIcon.Visible = true;
-            var menuItem = new MenuItem("Exit");
-            menuItem.Click += this.MenuExitClick;
-            this.notifyIcon.ContextMenu = new ContextMenu(new[] { menuItem });
+
+            var menuExitItem = new MenuItem("E&xit");
+            menuExitItem.Click += this.MenuExitClick;
+
+            var menuSwitchScreensItem = new MenuItem("&Switch Screen");
+            menuSwitchScreensItem.Click += this.MenuSwitchScreensClick;
+
+            this.notifyIcon.ContextMenu = new ContextMenu(new[] { menuExitItem, menuSwitchScreensItem });
 
             this.form = new OverlayForm();
             this.form.Show();
@@ -59,6 +64,11 @@
             this.notifyIcon.Dispose();
             this.form.Dispose();
             this.ExitThread();
+        }
+
+        private void MenuSwitchScreensClick(object sender, EventArgs e)
+        {
+            this.form.SwitchScreens();
         }
 
         private void TimerTick(object sender, EventArgs e)
